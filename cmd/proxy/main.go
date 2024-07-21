@@ -1,51 +1,23 @@
 package main
 
 import (
-	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"sync"
 	"syscall"
 
+	"github.com/hhk7734/authnz_proxy.go/internal/pkg/config"
 	"github.com/hhk7734/authnz_proxy.go/internal/pkg/logger"
 	"github.com/hhk7734/authnz_proxy.go/internal/userinterface/restapi"
-	"github.com/spf13/pflag"
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
 
 func main() {
-	viper.SetConfigName(".env")
-	viper.SetConfigType("dotenv")
-
-	workDir, _ := os.Getwd()
-	for {
-		if _, err := os.Stat(filepath.Join(workDir, ".env")); err == nil {
-			viper.AddConfigPath(workDir)
-			break
-		}
-		if workDir == "/" {
-			break
-		}
-		workDir = filepath.Dir(workDir)
-	}
-
-	if err := viper.ReadInConfig(); err != nil && !errors.As(err, &viper.ConfigFileNotFoundError{}) {
-		panic(fmt.Errorf("failed to read config file: %w", err))
-	}
-
-	// env
-	viper.AutomaticEnv()
-
-	// flag
-	pflag.CommandLine.AddFlagSet(logger.PFlagSet())
-	pflag.CommandLine.AddFlagSet(restapi.PFlagSet())
-
-	pflag.Parse()
-	viper.BindPFlags(pflag.CommandLine)
+	config.Load(
+		logger.PFlagSet(),
+		restapi.PFlagSet(),
+	)
 
 	logger.SetGlobalZapLogger(logger.ConfigFromViper())
 
