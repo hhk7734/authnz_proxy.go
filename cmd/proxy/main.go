@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/hhk7734/authnz_proxy.go/internal/pkg/logger"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
@@ -34,6 +35,10 @@ func main() {
 	viper.AutomaticEnv()
 
 	// flag
+	pflag.CommandLine.AddFlagSet(logger.LogPFlags())
+
 	pflag.Parse()
 	viper.BindPFlags(pflag.CommandLine)
+
+	logger.SetGlobalZapLogger(logger.LogConfigFromViper())
 }
