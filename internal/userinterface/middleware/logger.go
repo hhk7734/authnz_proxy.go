@@ -58,33 +58,35 @@ func (l *Logger) Logger(skipPaths []string) gin.HandlerFunc {
 	}
 }
 
-func (l *Logger) Recovery(c *gin.Context) {
-	defer func() {
-		if err := recover(); err != nil {
-			var brokenPipe bool
-			if ne, ok := err.(*net.OpError); ok {
-				if se, ok := ne.Err.(*os.SyscallError); ok {
-					if strings.Contains(strings.ToLower(se.Error()), "broken pipe") || strings.Contains(strings.ToLower(se.Error()), "connection reset by peer") {
-						brokenPipe = true
+func (l *Logger) Recovery() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		defer func() {
+			if err := recover(); err != nil {
+				var brokenPipe bool
+				if ne, ok := err.(*net.OpError); ok {
+					if se, ok := ne.Err.(*os.SyscallError); ok {
+						if strings.Contains(strings.ToLower(se.Error()), "broken pipe") || strings.Contains(strings.ToLower(se.Error()), "connection reset by peer") {
+							brokenPipe = true
+						}
 					}
 				}
+
+				if brokenPipe {
+					zapx.Ctx(c.Request.Context()).Warn("broken pipe", zap.Error(err.(error)))
+					c.Abort()
+					return
+				}
+
+				if err2, ok := err.(error); ok && errors.Is(err2, context.Canceled) {
+					zapx.Ctx(c.Request.Context()).Warn("request canceled", zap.Error(err.(error)))
+					c.Abort()
+					return
+				}
+
+				c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("%v\n%s", err, string(debug.Stack())))
 			}
+		}()
 
-			if brokenPipe {
-				zapx.Ctx(c.Request.Context()).Warn("broken pipe", zap.Error(err.(error)))
-				c.Abort()
-				return
-			}
-
-			if err2, ok := err.(error); ok && errors.Is(err2, context.Canceled) {
-				zapx.Ctx(c.Request.Context()).Warn("request canceled", zap.Error(err.(error)))
-				c.Abort()
-				return
-			}
-
-			c.AbortWithError(http.StatusInternalServerError, fmt.Errorf("%v\n%s", err, string(debug.Stack())))
-		}
-	}()
-
-	c.Next()
+		c.Next()
+	}
 }

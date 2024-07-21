@@ -49,7 +49,7 @@ func NewRestAPI(cfg Config) *RestAPI {
 
 	engin.RemoteIPHeaders = append([]string{"X-Envoy-External-Address"}, engin.RemoteIPHeaders...)
 	engin.Use(lm.Logger([]string{}))
-	engin.Use(lm.Recovery)
+	engin.Use(lm.Recovery())
 	engin.Use(middleware.RequestID(true))
 
 	server := &http.Server{
