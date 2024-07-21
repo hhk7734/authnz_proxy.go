@@ -17,9 +17,9 @@ import (
 	"go.uber.org/zap"
 )
 
-type GinLoggerMiddleware struct{}
+type Logger struct{}
 
-func (l *GinLoggerMiddleware) Logger(skipPaths []string) gin.HandlerFunc {
+func (l *Logger) Logger(skipPaths []string) gin.HandlerFunc {
 	skip := make(map[string]bool, len(skipPaths))
 	for _, path := range skipPaths {
 		skip[path] = true
@@ -58,7 +58,7 @@ func (l *GinLoggerMiddleware) Logger(skipPaths []string) gin.HandlerFunc {
 	}
 }
 
-func (l *GinLoggerMiddleware) Recovery(c *gin.Context) {
+func (l *Logger) Recovery(c *gin.Context) {
 	defer func() {
 		if err := recover(); err != nil {
 			var brokenPipe bool

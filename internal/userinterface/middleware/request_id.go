@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func GinRequestIDMiddleware(generateIfNotExist bool) gin.HandlerFunc {
+func RequestID(generateIfNotExist bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		requestID := c.GetHeader("X-Request-Id")
 		if _, err := uuid.Parse(requestID); err != nil {

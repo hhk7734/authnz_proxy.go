@@ -11,7 +11,7 @@ import (
 	"syscall"
 
 	"github.com/hhk7734/authnz_proxy.go/internal/pkg/logger"
-	"github.com/hhk7734/authnz_proxy.go/internal/userinterface/gin"
+	"github.com/hhk7734/authnz_proxy.go/internal/userinterface/restapi"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
@@ -41,15 +41,15 @@ func main() {
 	viper.AutomaticEnv()
 
 	// flag
-	pflag.CommandLine.AddFlagSet(logger.LogPFlags())
-	pflag.CommandLine.AddFlagSet(gin.PFlagSet())
+	pflag.CommandLine.AddFlagSet(logger.PFlagSet())
+	pflag.CommandLine.AddFlagSet(restapi.PFlagSet())
 
 	pflag.Parse()
 	viper.BindPFlags(pflag.CommandLine)
 
-	logger.SetGlobalZapLogger(logger.LogConfigFromViper())
+	logger.SetGlobalZapLogger(logger.ConfigFromViper())
 
-	server := gin.NewGinRestAPI(gin.ConfigFromViper())
+	server := restapi.NewRestAPI(restapi.ConfigFromViper())
 
 	listenErr := make(chan error, 1)
 	go func() {

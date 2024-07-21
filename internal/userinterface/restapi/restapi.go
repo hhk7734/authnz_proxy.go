@@ -1,4 +1,4 @@
-package gin
+package restapi
 
 import (
 	"context"
@@ -33,24 +33,24 @@ func ConfigFromViper() Config {
 	}
 }
 
-type GinRestAPI struct {
+type RestAPI struct {
 	engin  *gin.Engine
 	server *http.Server
 }
 
-func NewGinRestAPI(cfg Config) *GinRestAPI {
-	zap.L().Info("gin rest api config", zap.Dict("config",
+func NewRestAPI(cfg Config) *RestAPI {
+	zap.L().Info("rest api config", zap.Dict("config",
 		zap.String(PORT_KEY, cfg.Port),
 	))
 
-	lm := &middleware.GinLoggerMiddleware{}
+	lm := &middleware.Logger{}
 
 	engin := gin.New()
 
 	engin.RemoteIPHeaders = append([]string{"X-Envoy-External-Address"}, engin.RemoteIPHeaders...)
 	engin.Use(lm.Logger([]string{}))
 	engin.Use(lm.Recovery)
-	engin.Use(middleware.GinRequestIDMiddleware(true))
+	engin.Use(middleware.RequestID(true))
 
 	server := &http.Server{
 		Addr:         fmt.Sprintf(":%s", cfg.Port),
@@ -59,16 +59,16 @@ func NewGinRestAPI(cfg Config) *GinRestAPI {
 		WriteTimeout: 30 * time.Second,
 	}
 
-	return &GinRestAPI{
+	return &RestAPI{
 		engin:  engin,
 		server: server,
 	}
 }
 
-func (g *GinRestAPI) Run() error {
+func (g *RestAPI) Run() error {
 	return g.server.ListenAndServe()
 }
 
-func (g *GinRestAPI) Shutdown() error {
+func (g *RestAPI) Shutdown() error {
 	return g.server.Shutdown(context.Background())
 }
